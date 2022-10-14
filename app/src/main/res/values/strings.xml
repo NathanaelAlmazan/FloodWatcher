@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">FloodWatcher</string>
+    <string name="evacuate_hero_banner">Find the Closest Evacuation Center To You</string>
+    <string name="hero_image">hero banner image</string>
+    <string name="button_icon">button icon</string>
+    <string name="evacuation_centers">Evacuation Centers</string>
+    <string name="profile_icon">account profile icon</string>
+    <string name="location_permission_warning">To use this feature. Please enable location permission first. Thank you</string>
+</resources>
