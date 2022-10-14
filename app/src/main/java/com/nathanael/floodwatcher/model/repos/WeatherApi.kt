@@ -1,6 +1,7 @@
 package com.nathanael.floodwatcher.model.repos
 
 import com.google.gson.annotations.SerializedName
+import com.nathanael.floodwatcher.BuildConfig
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -28,7 +29,7 @@ interface WeatherApi {
     suspend fun getWeatherData(
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
-        @Query("appid") appId: String = "e0988107a61187fadd8f2bdd12347244"
+        @Query("appid") appId: String = BuildConfig.OPEN_WEATHER_API_KEY
     ): Response<OpenWeather>
 
 }
