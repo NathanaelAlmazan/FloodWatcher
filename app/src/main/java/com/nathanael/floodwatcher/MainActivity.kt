@@ -1,7 +1,11 @@
 package com.nathanael.floodwatcher
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -18,6 +22,7 @@ import androidx.core.view.WindowCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.nathanael.floodwatcher.model.WeatherData
 import com.nathanael.floodwatcher.screens.AppScaffold
 import com.nathanael.floodwatcher.theme.FloodWatcherTheme
 import java.util.concurrent.TimeUnit
@@ -32,6 +37,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // create notification channel
+        createNotificationChannel()
 
         // Make full screen
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -64,6 +72,10 @@ class MainActivity : ComponentActivity() {
         // Ask user to open GPS if GPS is turned off
         mainViewModel.requestLocation.observe(this) {
             if (it && !isLocationEnabled()) requestToEnableLocation()
+        }
+
+        mainViewModel.weatherData.observe(this) {
+            startFloodWarningService(it)
         }
     }
 
@@ -132,7 +144,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun createNotificationChannel() {
+        val name = getString(R.string.channel_name)
+        val descriptionText = getString(R.string.channel_description)
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+            description = descriptionText
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        }
+        // Register the channel with the system
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun startFloodWarningService(weatherData: WeatherData) {
+        val floodWarningIntent = Intent(this, NotificationService::class.java)
+        floodWarningIntent.putExtra("temperature", weatherData.temperature)
+        floodWarningIntent.putExtra("description", weatherData.desc)
+
+        startService(floodWarningIntent)
+    }
+
     companion object {
         const val REQUEST_CHECK_SETTINGS = 999
+        const val CHANNEL_ID = "floodServiceChannel"
     }
 }

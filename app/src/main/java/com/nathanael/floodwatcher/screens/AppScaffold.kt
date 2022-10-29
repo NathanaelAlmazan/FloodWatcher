@@ -24,13 +24,17 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.nathanael.floodwatcher.MainViewModel
 import com.nathanael.floodwatcher.R
+import com.nathanael.floodwatcher.screens.emergency.EmergencyScreen
 import com.nathanael.floodwatcher.screens.evacuate.EvacuateMapScreen
 import com.nathanael.floodwatcher.screens.evacuate.EvacuateScreen
 import com.nathanael.floodwatcher.screens.evacuate.EvacuateViewModel
+import com.nathanael.floodwatcher.screens.weather.FloodHistoryScreen
 import com.nathanael.floodwatcher.screens.weather.WeatherScreen
+import com.nathanael.floodwatcher.screens.weather.WeatherViewModel
 
 sealed class Screen(val route: String, val title: String, @DrawableRes val icon: Int) {
     object Weather : Screen("weatherScreen", "Weather", R.drawable.ic_weather_partly_cloudy)
+    object FloodHistory : Screen("floodHistory", "History", R.drawable.ic_weather_partly_cloudy)
     object Evacuate : Screen("evacuateScreen", "Evacuate", R.drawable.ic_run_fast)
     object EvacuateMap: Screen("evacuateMap", "EvacuateMap", R.drawable.ic_run_fast)
     object Emergency: Screen("emergencyScreen", "Emergency", R.drawable.ic_ambulance)
@@ -100,14 +104,32 @@ fun AppNavHost(
     navController: NavHostController,
     mainViewModel: MainViewModel,
     viewModelStoreOwner: ViewModelStoreOwner,
-    startDestination: String = Screen.Weather.route
+    startDestination: String = Screen.Emergency.route
 ) {
     NavHost(
         modifier = modifier,
         navController = navController,
         startDestination = startDestination
     ) {
-        composable(Screen.Weather.route) { WeatherScreen() }
+        composable(Screen.Weather.route) {
+            val weatherViewModel: WeatherViewModel = viewModel(
+                factory = WeatherViewModel.Factory,
+                viewModelStoreOwner = viewModelStoreOwner
+            )
+
+            WeatherScreen(
+                viewModel = weatherViewModel,
+                onNavigateToFloodHistory = { navController.navigate(Screen.FloodHistory.route) }
+            )
+        }
+        composable(Screen.FloodHistory.route) {
+            CompositionLocalProvider(LocalViewModelStoreOwner provides viewModelStoreOwner) {
+                FloodHistoryScreen(
+                    viewModel = viewModel(),
+                    onNavigateToWeather = { navController.navigate(Screen.Weather.route) }
+                )
+            }
+        }
         composable(Screen.Evacuate.route) {
             val evacuateViewModel: EvacuateViewModel = viewModel(
                 factory = EvacuateViewModel.Factory,
@@ -128,6 +150,9 @@ fun AppNavHost(
                     onNavigateToMain = { navController.navigate(Screen.Evacuate.route) }
                 )
             }
+        }
+        composable(Screen.Emergency.route) {
+            EmergencyScreen()
         }
     }
 }

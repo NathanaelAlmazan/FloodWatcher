@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -25,8 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nathanael.floodwatcher.R
+import com.nathanael.floodwatcher.model.FloodData
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -45,7 +47,7 @@ sealed class WeatherIcons(val value: String, @DrawableRes val icon: Int) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.Factory)) {
+fun WeatherScreen(viewModel: WeatherViewModel, onNavigateToFloodHistory: () -> Unit) {
 
     // This will listen to the changes in the database and update the UI
     DisposableEffect(viewModel) {
@@ -55,6 +57,7 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
 
     val weatherData = viewModel.weatherData
     val floodData = viewModel.floodData
+    val floodHistory = viewModel.floodHistory
     val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM, yyyy"))
     val dayName = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.SHORT_STANDALONE, Locale.ENGLISH)
 
@@ -80,8 +83,8 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
     LaunchedEffect(floodData.floodLevel) {
         floodDesc.value = when(floodData.floodLevel.roundToInt()) {
             0 -> "No Flood"
-            in 1..2 -> "Yellow Warning"
-            in 3..4 -> "Orange Warning"
+            1 -> "Yellow Warning"
+            2 -> "Orange Warning"
             else -> "Critical Level"
         }
     }
@@ -218,7 +221,7 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
                 Column(modifier = Modifier
                     .fillMaxHeight()
                     .weight(1f, true)
-                    .padding(16.dp),
+                    .padding(16.dp, 12.dp),
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.End
                 ) {
@@ -228,7 +231,8 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
                     )
                     Text(
                         text = weatherDesc.value,
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.End
                     )
                 }
             }
@@ -240,7 +244,10 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
             .padding(8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
 
             // Card for humidity
-            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Box(modifier = Modifier
                     .height(50.dp)
                     .width(50.dp)
@@ -268,7 +275,10 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
             }
 
             // Card for precipitation value
-            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Box(modifier = Modifier
                     .height(50.dp)
                     .width(50.dp)
@@ -296,7 +306,10 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
             }
 
             // Card for wind speed
-            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Box(modifier = Modifier
                     .height(50.dp)
                     .width(50.dp)
@@ -363,21 +376,24 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel(factory = WeatherViewM
                 text = "Flood History",
                 style = MaterialTheme.typography.titleLarge
             )
-            TextButton(onClick = { weatherIcon.value = WeatherIcons.Stormy }) {
+            TextButton(onClick = onNavigateToFloodHistory) {
                 Text(text = "See All")
             }
         }
 
         LazyRow(modifier = Modifier.fillMaxSize()) {
-            items(10) {
-                FloodHistoryCard()
+            items(floodHistory.take(10)) { data ->
+                FloodHistoryCard(data)
             }
         }
     }
 }
 
 @Composable
-fun FloodHistoryCard() {
+fun FloodHistoryCard(floodData: FloodData) {
+    val recordDate = floodData.timestamp.toDate()
+    val dateFormatter = SimpleDateFormat("MMM. dd", Locale.US)
+
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.onPrimary),
@@ -398,13 +414,13 @@ fun FloodHistoryCard() {
                 modifier = Modifier.padding(8.dp)
             )
             Text(
-                text = "3 FT",
+                text = "${floodData.floodLevel.toInt()} FT",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp)
             )
             Text(
-                text = "Sept. 3",
+                text = dateFormatter.format(recordDate),
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center
             )

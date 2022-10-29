@@ -115,7 +115,7 @@ fun EvacuateMapScreen(
             shape = RoundedCornerShape(0.dp, 0.dp, 0.dp, 120.dp),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
-            // GoogleMaps(selected = selectedCenter, shape.value, userLocation)
+            GoogleMaps(selected = selectedCenter, shape.value, userLocation)
         }
 
         Column(modifier = Modifier
@@ -154,8 +154,7 @@ fun EvacuateMapScreen(
                     Button(
                         onClick = onRequestDirections,
                         elevation = ButtonDefaults.buttonElevation(12.dp),
-                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primaryContainer),
-                        enabled = false
+                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         Icon(
                             painterResource(R.drawable.ic_baseline_directions_24),

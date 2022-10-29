@@ -2,11 +2,14 @@ package com.nathanael.floodwatcher.model.repos
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import com.nathanael.floodwatcher.model.DbCollections
 import com.nathanael.floodwatcher.model.FloodData
+import com.nathanael.floodwatcher.model.FloodSummary
 import com.nathanael.floodwatcher.model.WeatherData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 /*
@@ -62,6 +65,46 @@ class WeatherRepository(private val database: FirebaseFirestore) {
                     result.wind.deg
                 )
                 Result.Success(weatherData)
+            } catch (e: Exception) {
+                Result.Error(e)
+            }
+        }
+    }
+
+    suspend fun fetchFloodHistory(): Result<List<FloodData>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val documents = database.collection(DbCollections.FLOOD.db)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .get()
+                    .await()
+
+                val floodHistory = ArrayList<FloodData>()
+                for (document in documents) {
+                    floodHistory.add(document.toObject())
+                }
+
+                Result.Success(floodHistory)
+            } catch (e: Exception) {
+                Result.Error(e)
+            }
+        }
+    }
+
+    suspend fun fetchFloodSummary(): Result<List<FloodSummary>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val documents = database.collection(DbCollections.SUMMARY.db)
+                    .orderBy("index")
+                    .get()
+                    .await()
+
+                val floodHistory = ArrayList<FloodSummary>()
+                for (document in documents) {
+                    floodHistory.add(document.toObject())
+                }
+
+                Result.Success(floodHistory)
             } catch (e: Exception) {
                 Result.Error(e)
             }

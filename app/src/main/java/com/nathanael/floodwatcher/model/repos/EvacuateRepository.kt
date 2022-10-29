@@ -20,9 +20,11 @@ class EvacuateRepository(private val database: FirebaseFirestore) {
 
     suspend fun fetchEvacuationCenters(): Result<List<EvacuationCenter>> {
         return try {
-            val documents = database.collection(DbCollections.EVACUATE.db).get().await()
-            val evacuationCenters = ArrayList<EvacuationCenter>()
+            val documents = database.collection(DbCollections.EVACUATE.db)
+                .get()
+                .await()
 
+            val evacuationCenters = ArrayList<EvacuationCenter>()
             for (document in documents) {
                 evacuationCenters.add(document.toObject())
             }
