@@ -1,7 +1,9 @@
 package com.nathanael.floodwatcher.model
 
 data class EmergencyDirectory(
+    var generatedId: String = "",
     val name: String = "",
     val contact: String = "",
-    val type: String = ""
+    val type: String = "",
+    var category: String = ""
 )

@@ -1,8 +1,10 @@
 package com.nathanael.floodwatcher.model.repos
 
+import android.net.Uri
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.storage.FirebaseStorage
 import com.nathanael.floodwatcher.model.DbCollections
 import com.nathanael.floodwatcher.model.EvacuationCenter
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +17,10 @@ import kotlinx.coroutines.withContext
  directions
 */
 
-class EvacuateRepository(private val database: FirebaseFirestore) {
+class EvacuateRepository(
+    private val database: FirebaseFirestore,
+    private val storage: FirebaseStorage
+) {
     private val directionsApi = DirectionsRetrofitHelper.getInstance().create(DirectionsApi::class.java)
 
     suspend fun fetchEvacuationCenters(): Result<List<EvacuationCenter>> {
@@ -26,10 +31,84 @@ class EvacuateRepository(private val database: FirebaseFirestore) {
 
             val evacuationCenters = ArrayList<EvacuationCenter>()
             for (document in documents) {
-                evacuationCenters.add(document.toObject())
+                val center = document.toObject<EvacuationCenter>()
+                center.generatedId = document.id
+                evacuationCenters.add(center)
             }
 
             Result.Success(evacuationCenters)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
+
+    suspend fun createEvacuationCenter(
+        evacuationCenter: EvacuationCenter,
+        imageFile: Uri
+    ): Result<EvacuationCenter> {
+        return try {
+            val result = uploadEvacuationImage(evacuationCenter.image, imageFile)
+
+            if (result is Result.Success<String>) {
+                evacuationCenter.image = result.data
+                database.collection(DbCollections.EVACUATE.db)
+                    .add(evacuationCenter)
+                    .await()
+
+                Result.Success(evacuationCenter)
+            }
+
+            Result.Success(evacuationCenter)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
+
+    suspend fun updateEvacuationCenter(
+        evacuationCenter: EvacuationCenter,
+        imageFile: Uri?
+    ): Result<EvacuationCenter> {
+        return try {
+            var updates = mapOf(
+                "name" to evacuationCenter.name,
+                "address" to evacuationCenter.address,
+                "image" to evacuationCenter.image,
+                "longitude" to evacuationCenter.longitude,
+                "latitude" to evacuationCenter.latitude
+            )
+
+            if (imageFile != null) {
+                val result = uploadEvacuationImage(evacuationCenter.image, imageFile)
+                if (result is Result.Success<String>) {
+                    updates = mapOf(
+                        "name" to evacuationCenter.name,
+                        "address" to evacuationCenter.address,
+                        "image" to result.data,
+                        "longitude" to evacuationCenter.longitude,
+                        "latitude" to evacuationCenter.latitude
+                    )
+                }
+            }
+
+            database.collection(DbCollections.EVACUATE.db)
+                .document(evacuationCenter.generatedId)
+                .update(updates)
+                .await()
+
+            Result.Success(evacuationCenter)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
+
+    suspend fun deleteEvacuationCenter(evacuationCenter: EvacuationCenter): Result<EvacuationCenter> {
+        return try {
+            database.collection(DbCollections.EVACUATE.db)
+                .document(evacuationCenter.generatedId)
+                .delete()
+                .await()
+
+            Result.Success(evacuationCenter)
         } catch (ex: Exception) {
             Result.Error(ex)
         }
@@ -52,4 +131,17 @@ class EvacuateRepository(private val database: FirebaseFirestore) {
         }
     }
 
+    private suspend fun uploadEvacuationImage(fileName: String, imageFile: Uri): Result<String> {
+        return try {
+            val storageRef = storage.reference
+
+            val imageRef = storageRef.child("evacuations/$fileName")
+            imageRef.putFile(imageFile).await()
+            val imageURL = imageRef.downloadUrl.await().toString()
+
+            Result.Success(imageURL)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
 }

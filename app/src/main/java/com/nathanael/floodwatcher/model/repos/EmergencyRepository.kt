@@ -7,6 +7,7 @@ import com.nathanael.floodwatcher.model.EmergencyDirectory
 import kotlinx.coroutines.tasks.await
 
 class EmergencyRepository(private val database: FirebaseFirestore) {
+
     suspend fun fetchDirectories(type: String): Result<List<EmergencyDirectory>> {
         return try {
             val documents = database
@@ -18,10 +19,63 @@ class EmergencyRepository(private val database: FirebaseFirestore) {
 
             val emergencyDirectories = ArrayList<EmergencyDirectory>()
             for (document in documents) {
-                emergencyDirectories.add(document.toObject())
+                val directory = document.toObject<EmergencyDirectory>()
+                directory.generatedId = document.id
+                directory.category = type
+                emergencyDirectories.add(directory)
             }
 
             Result.Success(emergencyDirectories)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
+
+    suspend fun createDirectory(directory: EmergencyDirectory): Result<EmergencyDirectory> {
+        return try {
+            database.collection(DbCollections.EMERGENCY.db)
+                .document(directory.category)
+                .collection("directories")
+                .add(directory)
+                .await()
+
+            Result.Success(directory)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
+
+    suspend fun updateDirectory(directory: EmergencyDirectory): Result<EmergencyDirectory> {
+        return try {
+            val updates = mapOf(
+                "name" to directory.name,
+                "contact" to directory.contact,
+                "type" to directory.type
+            )
+
+            database.collection(DbCollections.EMERGENCY.db)
+                .document(directory.category)
+                .collection("directories")
+                .document(directory.generatedId)
+                .update(updates)
+                .await()
+
+            Result.Success(directory)
+        } catch (ex: Exception) {
+            Result.Error(ex)
+        }
+    }
+
+    suspend fun deleteDirectory(directory: EmergencyDirectory): Result<EmergencyDirectory> {
+        return try {
+            database.collection(DbCollections.EMERGENCY.db)
+                .document(directory.category)
+                .collection("directories")
+                .document(directory.generatedId)
+                .delete()
+                .await()
+
+            Result.Success(directory)
         } catch (ex: Exception) {
             Result.Error(ex)
         }

@@ -1,6 +1,8 @@
 package com.nathanael.floodwatcher.screens.evacuate
 
 import android.location.Location
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +15,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.nathanael.floodwatcher.model.repos.Result
 import com.nathanael.floodwatcher.model.EvacuationCenter
 import com.nathanael.floodwatcher.model.repos.DirectionResponse
@@ -42,6 +45,41 @@ class EvacuateViewModel(private val repository: EvacuateRepository): ViewModel()
 
     fun resetDirection() {
         _directions = null
+    }
+
+    fun createEvacuationCenter(evacuationCenter: EvacuationCenter, imageFile: Uri) {
+        viewModelScope.launch {
+            when(val result = repository.createEvacuationCenter(evacuationCenter, imageFile)) {
+                is Result.Success<EvacuationCenter> -> {
+                    fetchEvacuationCenters()
+                }
+                is Result.Error -> {
+                    _errorMessage = result.exception.message
+                }
+            }
+        }
+    }
+
+    fun updateEvacuationCenter(evacuationCenter: EvacuationCenter, imageFile: Uri?) {
+        viewModelScope.launch {
+            when(val result = repository.updateEvacuationCenter(evacuationCenter, imageFile)) {
+                is Result.Success<EvacuationCenter> -> {
+                    fetchEvacuationCenters()
+                }
+                is Result.Error -> {
+                    _errorMessage = result.exception.message
+                }
+            }
+        }
+    }
+
+    fun deleteEvacuationCenter(evacuationCenter: EvacuationCenter) {
+        viewModelScope.launch {
+            when(val result = repository.deleteEvacuationCenter(evacuationCenter)) {
+                is Result.Success<EvacuationCenter> -> fetchEvacuationCenters()
+                is Result.Error -> _errorMessage = result.exception.message
+            }
+        }
     }
 
     fun fetchDirection(start: LatLng, destination: LatLng) {
@@ -93,7 +131,8 @@ class EvacuateViewModel(private val repository: EvacuateRepository): ViewModel()
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val database = Firebase.firestore
-                EvacuateViewModel(EvacuateRepository(database))
+                val storage = Firebase.storage
+                EvacuateViewModel(EvacuateRepository(database, storage))
             }
         }
     }

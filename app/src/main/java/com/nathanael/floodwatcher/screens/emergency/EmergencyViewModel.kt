@@ -21,21 +21,64 @@ class EmergencyViewModel(private val repository: EmergencyRepository): ViewModel
     private var _medicalDirectories = mutableStateListOf<EmergencyDirectory>()
     private var _municipalDirectories = mutableStateListOf<EmergencyDirectory>()
     private var _nationalDirectories = mutableStateListOf<EmergencyDirectory>()
+    private var _selectedDirectory by mutableStateOf<EmergencyDirectory?>(null)
     private var _errorMessage by mutableStateOf<String?>(null)
 
     val barangayDirectories: List<EmergencyDirectory> get() = _barangayDirectories
     val medicalDirectories: List<EmergencyDirectory> get() = _medicalDirectories
     val municipalDirectories: List<EmergencyDirectory> get() = _municipalDirectories
     val nationalDirectories: List<EmergencyDirectory> get() = _nationalDirectories
+    var selectedDirectory: EmergencyDirectory?
+        get() = _selectedDirectory
+        set(value) { _selectedDirectory = value }
+
+    val errorMessage: String? get() = _errorMessage
 
     init {
-        val directories = listOf("barangay", "medical", "municipal", "ndrrmc")
-        for (directory in directories) {
-            fetchDirectories(directory)
+        fetchAllDirectories()
+    }
+
+    fun createDirectory(directory: EmergencyDirectory) {
+        viewModelScope.launch {
+            when (val result = repository.createDirectory(directory)) {
+                is Result.Success<EmergencyDirectory> -> fetchAllDirectories()
+                is Result.Error -> _errorMessage = result.exception.message
+            }
         }
     }
 
-    private fun fetchDirectories(type: String) {
+    fun updateDirectory(directory: EmergencyDirectory) {
+        viewModelScope.launch {
+            when (val result = repository.updateDirectory(directory)) {
+                is Result.Success<EmergencyDirectory> -> {
+                    _selectedDirectory = null
+                    fetchAllDirectories()
+                }
+                is Result.Error -> _errorMessage = result.exception.message
+            }
+        }
+    }
+
+    fun deleteDirectory(directory: EmergencyDirectory) {
+        viewModelScope.launch {
+            when (val result = repository.deleteDirectory(directory)) {
+                is Result.Success<EmergencyDirectory> -> {
+                    _selectedDirectory = null
+                    fetchAllDirectories()
+                }
+                is Result.Error -> _errorMessage = result.exception.message
+            }
+        }
+    }
+
+    private fun fetchAllDirectories() {
+        val directories = listOf("barangay", "medical", "municipal", "ndrrmc")
+        for (directory in directories) {
+            fetchDirectory(directory)
+        }
+    }
+
+    private fun fetchDirectory(type: String) {
         viewModelScope.launch {
             when (val result = repository.fetchDirectories(type)) {
                 is Result.Success<List<EmergencyDirectory>> -> {

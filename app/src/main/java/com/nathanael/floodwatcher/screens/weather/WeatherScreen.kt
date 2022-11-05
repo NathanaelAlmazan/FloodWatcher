@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.nathanael.floodwatcher.MainViewModel
 import com.nathanael.floodwatcher.R
 import com.nathanael.floodwatcher.model.FloodData
 import java.text.SimpleDateFormat
@@ -47,12 +48,21 @@ sealed class WeatherIcons(val value: String, @DrawableRes val icon: Int) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun WeatherScreen(viewModel: WeatherViewModel, onNavigateToFloodHistory: () -> Unit) {
+fun WeatherScreen(
+    viewModel: WeatherViewModel,
+    mainViewModel: MainViewModel,
+    onNavigateToFloodHistory: () -> Unit
+) {
 
     // This will listen to the changes in the database and update the UI
     DisposableEffect(viewModel) {
         viewModel.addListener()
         onDispose { viewModel.removeListener() }
+    }
+
+    LaunchedEffect(Unit) {
+        mainViewModel.hideActionButton = true
+        mainViewModel.hideNavbar = false
     }
 
     val weatherData = viewModel.weatherData

@@ -1,5 +1,11 @@
 package com.nathanael.floodwatcher.screens.emergency
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -14,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,12 +29,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
+import com.nathanael.floodwatcher.MainViewModel
 import com.nathanael.floodwatcher.R
 import com.nathanael.floodwatcher.model.EmergencyDirectory
+import com.nathanael.floodwatcher.screens.evacuate.LocationAlertDialog
 
 sealed class DirectoryIcon(val value: String, @DrawableRes val icon: Int) {
     object Mobile: DirectoryIcon("mobile", R.drawable.ic_phone)
@@ -36,7 +48,90 @@ sealed class DirectoryIcon(val value: String, @DrawableRes val icon: Int) {
 }
 
 @Composable
-fun EmergencyScreen(viewModel: EmergencyViewModel = viewModel(factory = EmergencyViewModel.Factory)) {
+fun EmergencyScreen(
+    viewModel: EmergencyViewModel,
+    mainViewModel: MainViewModel,
+    onNavigateToDirectory: () -> Unit
+) {
+    var isAdmin by rememberSaveable { mutableStateOf(false) }
+    var selectedDirectory by rememberSaveable { mutableStateOf<EmergencyDirectory?>(null) }
+    var isDenied by rememberSaveable { mutableStateOf(false) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    val userLocation = mainViewModel.userLocation
+
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) isDenied = true
+    }
+
+    val onSendLocation = {
+        if (userLocation.latitude > 0 && userLocation.longitude > 0) {
+            val directory = viewModel.barangayDirectories.filter { it.type == "mobile" }
+            val contact = directory[0].contact
+
+            val smsUri = Uri.parse("smsto:$contact")
+            val intent = Intent(Intent.ACTION_SENDTO, smsUri)
+            intent.putExtra(
+                "sms_body",
+                "Help!! We need your immediate assistance. Our location is at ${userLocation.latitude} latitude and " +
+                        "${userLocation.longitude} longitude. Thank you.")
+
+            startActivity(context, intent, null)
+        } else {
+            showDialog = true
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (mainViewModel.currentUser != null) {
+            mainViewModel.hideActionButton = !mainViewModel.currentUser!!.admin
+        }
+        mainViewModel.hideNavbar = false
+    }
+
+    LaunchedEffect(mainViewModel.currentUser) {
+        if (mainViewModel.currentUser != null) {
+            isAdmin = mainViewModel.currentUser!!.admin
+        }
+    }
+
+    if (selectedDirectory != null) {
+        CallPhoneAlertDialog(
+            name = selectedDirectory!!.name,
+            onCallDirectory = {
+                when (PackageManager.PERMISSION_GRANTED) {
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CALL_PHONE
+                    ) -> {
+                        val callIntent = Intent(Intent.ACTION_CALL)
+                        callIntent.data = Uri.parse("tel:" + selectedDirectory!!.contact)
+                        startActivity(context, callIntent, null)
+                    }
+                    else -> {
+                        launcher.launch(Manifest.permission.CALL_PHONE)
+                    }
+                }
+            },
+            onCloseDialog = { selectedDirectory = null }
+        )
+    }
+
+    if (isDenied) {
+        CallPermissionDeniedDialog(
+            onCloseDialog = { isDenied = false }
+        )
+    }
+
+    if (showDialog) {
+        LocationAlertDialog(
+            onRequestLocation = { mainViewModel.requestUserLocation() },
+            onCloseDialog = {  showDialog = false }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -46,10 +141,12 @@ fun EmergencyScreen(viewModel: EmergencyViewModel = viewModel(factory = Emergenc
         Text(
             text = "Emergency Directories",
             style = MaterialTheme.typography.displaySmall,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, top = 40.dp, bottom = 16.dp),
+                .padding(top = 40.dp, bottom = 16.dp),
         )
+
         DirectoryCard(
             label = "Barangay Directories",
             colors = listOf(
@@ -58,6 +155,12 @@ fun EmergencyScreen(viewModel: EmergencyViewModel = viewModel(factory = Emergenc
             ),
             icon = R.drawable.ic_home_city,
             directories = viewModel.barangayDirectories,
+            onNavigateToDirectory = {
+                viewModel.selectedDirectory = it
+                onNavigateToDirectory()
+            },
+            onPhoneCall = { selectedDirectory = it },
+            isAdmin = isAdmin
         )
         DirectoryCard(
             label = "Medical Directories",
@@ -66,7 +169,13 @@ fun EmergencyScreen(viewModel: EmergencyViewModel = viewModel(factory = Emergenc
                 Color(0xFFF65A83)
             ),
             icon = R.drawable.ic_medical_bag,
-            directories = viewModel.medicalDirectories
+            directories = viewModel.medicalDirectories,
+            onNavigateToDirectory = {
+                viewModel.selectedDirectory = it
+                onNavigateToDirectory()
+            },
+            onPhoneCall = { selectedDirectory = it },
+            isAdmin = isAdmin
         )
         DirectoryCard(
             label = "Municipal Directories",
@@ -75,7 +184,13 @@ fun EmergencyScreen(viewModel: EmergencyViewModel = viewModel(factory = Emergenc
                 Color(0xFF035397)
             ),
             icon = R.drawable.ic_caloocan_city,
-            directories = viewModel.municipalDirectories
+            directories = viewModel.municipalDirectories,
+            onNavigateToDirectory = {
+                viewModel.selectedDirectory = it
+                onNavigateToDirectory()
+            },
+            onPhoneCall = { selectedDirectory = it },
+            isAdmin = isAdmin
         )
         DirectoryCard(
             label = "NDRRMC",
@@ -84,7 +199,30 @@ fun EmergencyScreen(viewModel: EmergencyViewModel = viewModel(factory = Emergenc
                 Color(0xFFA0D995)
             ),
             icon = R.drawable.ic_ndrrmc_logo,
-            directories = viewModel.nationalDirectories
+            directories = viewModel.nationalDirectories,
+            onNavigateToDirectory = {
+                viewModel.selectedDirectory = it
+                onNavigateToDirectory()
+            },
+            onPhoneCall = { selectedDirectory = it },
+            isAdmin = isAdmin
+        )
+        DirectoryCard(
+            label = "Send Location",
+            colors = listOf(
+                Color(0xFF355764),
+                Color(0xFF81CACF)
+            ),
+            icon = R.drawable.ic_baseline_send_24,
+            directories = viewModel.nationalDirectories,
+            onNavigateToDirectory = {
+                viewModel.selectedDirectory = it
+                onNavigateToDirectory()
+            },
+            onPhoneCall = { selectedDirectory = it },
+            onSendLocation = onSendLocation,
+            isAdmin = isAdmin,
+            maxHeight = 250
         )
     }
 }
@@ -95,12 +233,16 @@ fun DirectoryCard(
     colors: List<Color>,
     @DrawableRes icon: Int,
     directories: List<EmergencyDirectory>,
-    expand: Boolean = false
+    onNavigateToDirectory: (EmergencyDirectory) -> Unit,
+    onPhoneCall: (EmergencyDirectory) -> Unit,
+    onSendLocation: (() -> Unit)? = null,
+    maxHeight: Int = 370,
+    isAdmin: Boolean = false
 ) {
-    var expanded by remember { mutableStateOf(expand) }
+    var expanded by remember { mutableStateOf(false) }
 
     val extraPadding by animateDpAsState(
-        if (expanded) 380.dp else 150.dp,
+        if (expanded) maxHeight.dp else 120.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -110,7 +252,7 @@ fun DirectoryCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(extraPadding.coerceAtLeast(150.dp))
+            .height(extraPadding.coerceAtLeast(120.dp))
             .padding(16.dp, 12.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(12.dp)
@@ -119,7 +261,7 @@ fun DirectoryCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .height(150.dp)
+                .height(120.dp)
                 .background(
                     brush = Brush.linearGradient(
                         colors = colors,
@@ -198,19 +340,78 @@ fun DirectoryCard(
             }
         }
 
-        LazyColumn(modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-        ) {
-            items(directories) { directory ->
-                DirectoryInfo(directory)
+        if (onSendLocation != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            ) {
+                LocationInfo(
+                    onSendLocation = onSendLocation
+                )
+            }
+        } else {
+            LazyColumn(modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
+            ) {
+                items(directories) { directory ->
+                    DirectoryInfo(
+                        directory = directory,
+                        isAdmin = isAdmin,
+                        onIconClick = { onNavigateToDirectory(directory) },
+                        onPhoneCall = { onPhoneCall(directory) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun DirectoryInfo(directory: EmergencyDirectory) {
+fun LocationInfo(onSendLocation: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_baseline_location_on_24),
+            contentDescription = null
+        )
+        Column(modifier = Modifier.weight(1f, true)) {
+            Text(
+                text = "Send my location",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "Send your location via SMS to rescuers as an SOS signal",
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+        IconButton(
+            onClick = onSendLocation,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_baseline_send_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .width(15.dp)
+                    .height(15.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun DirectoryInfo(
+    directory: EmergencyDirectory,
+    isAdmin: Boolean,
+    onIconClick: () -> Unit,
+    onPhoneCall: () -> Unit
+) {
     val directoryIcon = remember {
         mutableStateOf<DirectoryIcon>(DirectoryIcon.Mobile)
     }
@@ -242,6 +443,18 @@ fun DirectoryInfo(directory: EmergencyDirectory) {
             Text(
                 text = directory.name,
                 style = MaterialTheme.typography.labelMedium
+            )
+        }
+        IconButton(
+            onClick = if (isAdmin) onIconClick else onPhoneCall,
+            enabled = isAdmin || directory.type != "email"
+        ) {
+            Icon(
+                painter = if (isAdmin) painterResource(R.drawable.ic_baseline_edit_24) else painterResource(R.drawable.ic_baseline_arrow_forward_ios_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .width(15.dp)
+                    .height(15.dp)
             )
         }
     }

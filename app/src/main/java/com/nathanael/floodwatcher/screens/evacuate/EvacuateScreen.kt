@@ -8,10 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -25,14 +23,29 @@ import com.nathanael.floodwatcher.MainViewModel
 fun EvacuateScreen(
     mainViewModel: MainViewModel,
     viewModel: EvacuateViewModel,
-    onNavigateToMap: () -> Unit
+    onNavigateToMap: () -> Unit,
+    onNavigateToEdit: () -> Unit
 ) {
     val selectedCenter = viewModel.selectedCenter
     val userLocation = mainViewModel.userLocation
     val showDialog = remember { mutableStateOf(false) }
+    var isAdmin by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (mainViewModel.currentUser != null) {
+            mainViewModel.hideActionButton = !mainViewModel.currentUser!!.admin
+        }
+        mainViewModel.hideNavbar = false
+    }
 
     LaunchedEffect(selectedCenter) {
         viewModel.resetDirection()
+    }
+
+    LaunchedEffect(mainViewModel.currentUser) {
+        if (mainViewModel.currentUser != null) {
+            isAdmin = mainViewModel.currentUser!!.admin
+        }
     }
 
     val onSearchClosestCenter = {
@@ -135,7 +148,12 @@ fun EvacuateScreen(
                         } else {
                             showDialog.value = true
                         }
-                    }
+                    },
+                    {
+                        viewModel.setSelectedCenter(place)
+                        onNavigateToEdit()
+                    },
+                    isAdmin
                 )
             }
         }

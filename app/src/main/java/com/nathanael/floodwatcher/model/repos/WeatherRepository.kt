@@ -4,10 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
-import com.nathanael.floodwatcher.model.DbCollections
-import com.nathanael.floodwatcher.model.FloodData
-import com.nathanael.floodwatcher.model.FloodSummary
-import com.nathanael.floodwatcher.model.WeatherData
+import com.nathanael.floodwatcher.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -105,6 +102,24 @@ class WeatherRepository(private val database: FirebaseFirestore) {
                 }
 
                 Result.Success(floodHistory)
+            } catch (e: Exception) {
+                Result.Error(e)
+            }
+        }
+    }
+
+    suspend fun fetchUserDetails(uid: String): Result<UserDetails?> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val document = database.collection(DbCollections.USERS.db)
+                    .document(uid)
+                    .get()
+                    .await()
+
+                val userDetail = document.toObject<UserDetails>()
+                if (userDetail != null) userDetail.uid = uid
+
+                Result.Success(userDetail)
             } catch (e: Exception) {
                 Result.Error(e)
             }

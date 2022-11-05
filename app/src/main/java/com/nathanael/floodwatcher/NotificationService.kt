@@ -16,6 +16,7 @@ import com.nathanael.floodwatcher.model.FloodData
 
 
 class NotificationService: Service() {
+    private var previousLevel: Int = 0
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -28,7 +29,7 @@ class NotificationService: Service() {
         val temperature = extras?.get("temperature") as Double?
         val description = extras?.get("description") as String?
 
-        startForeground(NOTIFICATION_ID, buildNotification(0, temperature, description))
+        startForeground(NOTIFICATION_ID, buildNotification(0,0, temperature, description))
 
         val db = Firebase.firestore
         val query = db.collection(DbCollections.WEATHER.db)
@@ -42,15 +43,25 @@ class NotificationService: Service() {
 
             if (snapshot != null && snapshot.exists()) {
                 val floodData = snapshot.toObject<FloodData>()
-                floodData?.floodLevel?.toInt()
-                    ?.let { updateNotification(it, temperature, description) }
+                if (floodData != null) {
+                    if (floodData.floodLevel.toInt() != previousLevel) {
+                        previousLevel = floodData.floodLevel.toInt()
+
+                        updateNotification(
+                            floodData.precipitation.toInt(),
+                            floodData.floodLevel.toInt(),
+                            temperature,
+                            description
+                        )
+                    }
+                }
             }
         }
 
         return START_STICKY
     }
 
-    private fun buildNotification(floodLevel: Int, temp: Double? = 0.0, desc: String? = ""): Notification {
+    private fun buildNotification(rain: Int, floodLevel: Int, temp: Double? = 0.0, desc: String? = ""): Notification {
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -61,9 +72,11 @@ class NotificationService: Service() {
             it.replaceFirstChar { char -> char.uppercaseChar() }
         }
 
+        val precipitation = if (rain > 1) "$rain% Rain." else "No Rain."
+
         val tempInCelsius = if (temp != null) temp - 273.15 else 0.0
         val tempInString = String.format("%.1f", tempInCelsius)
-        val title = if (floodLevel > 0) "Flood level reached $floodLevel FT!" else "$tempInString°C $descCapitalized"
+        val title = if (floodLevel > 0) "Flood level reached $floodLevel FT! $precipitation" else "$tempInString°C $descCapitalized, $precipitation"
         val content = if (floodLevel > 0) "View evacuation centers and emergency hotlines" else "View flood history and announcements"
         val icon = if (floodLevel > 0) R.drawable.ic_home_flood else R.drawable.ic_weather_partly_cloudy
 
@@ -76,9 +89,9 @@ class NotificationService: Service() {
             .build()
     }
 
-    private fun updateNotification(floodLevel: Int, temp: Double? = 0.0, desc: String? = "") {
+    private fun updateNotification(rain: Int, floodLevel: Int, temp: Double? = 0.0, desc: String? = "") {
         with(NotificationManagerCompat.from(this)) {
-            notify(NOTIFICATION_ID, buildNotification(floodLevel, temp, desc))
+            notify(NOTIFICATION_ID, buildNotification(rain, floodLevel, temp, desc))
         }
     }
 

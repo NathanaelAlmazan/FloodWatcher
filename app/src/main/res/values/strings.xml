@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FloodWatcher</string>
+    <string name="app_name">DISAFETER</string>
     <string name="evacuate_hero_banner">Find the Closest Evacuation Center To You</string>
     <string name="hero_image">hero banner image</string>
     <string name="button_icon">button icon</string>

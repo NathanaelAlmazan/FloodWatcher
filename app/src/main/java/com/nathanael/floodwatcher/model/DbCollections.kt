@@ -6,5 +6,6 @@ enum class DbCollections(val db: String) {
     EVACUATE("evacuation"),
     FLOOD("flood"),
     SUMMARY("summary"),
-    EMERGENCY("emergency")
+    EMERGENCY("emergency"),
+    USERS("users")
 }

@@ -39,7 +39,7 @@ val Typography = Typography(
     ),
     displaySmall = TextStyle(
         fontFamily = MontserratFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = 0.sp

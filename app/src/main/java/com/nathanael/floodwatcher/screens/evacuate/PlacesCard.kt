@@ -3,6 +3,8 @@ package com.nathanael.floodwatcher.screens.evacuate
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,7 +27,13 @@ import com.nathanael.floodwatcher.model.EvacuationCenter
 */
 
 @Composable
-fun PlacesCard(place: EvacuationCenter, onSelect: () -> Unit, onLocate: () -> Unit) {
+fun PlacesCard(
+    place: EvacuationCenter,
+    onSelect: () -> Unit,
+    onLocate: () -> Unit,
+    onEdit: () -> Unit,
+    isAdmin: Boolean
+) {
     Card(
         modifier = Modifier
             .width(250.dp)
@@ -96,6 +104,21 @@ fun PlacesCard(place: EvacuationCenter, onSelect: () -> Unit, onLocate: () -> Un
                             contentDescription = stringResource(R.string.button_icon),
                             modifier = Modifier.size(ButtonDefaults.IconSize)
                         )
+                    }
+
+                    if (isAdmin) {
+                        OutlinedButton(
+                            onClick = onEdit,
+                            shape = CircleShape,
+                            contentPadding = PaddingValues(0.dp),
+                            modifier= Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = stringResource(R.string.button_icon),
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )
+                        }
                     }
                 }
             }
