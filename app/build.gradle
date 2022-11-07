@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.nathanael.floodwatcher'
+    namespace 'com.floodalert.disafeter'
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.nathanael.floodwatcher"
+        applicationId "com.floodalert.disafeter"
         minSdk 26
         targetSdk 32
         versionCode 1
