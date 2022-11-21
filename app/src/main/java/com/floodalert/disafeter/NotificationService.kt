@@ -11,7 +11,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.floodalert.disafeter.MainActivity.Companion.CHANNEL_ID
-import com.floodalert.disafeter.R
 import com.floodalert.disafeter.model.DbCollections
 import com.floodalert.disafeter.model.FloodData
 
@@ -55,6 +54,12 @@ class NotificationService: Service() {
                             description
                         )
                     }
+
+                    if (floodData.announcement.isNotEmpty()) {
+                        with(NotificationManagerCompat.from(this)) {
+                            notify(BULLETIN_NOTIFICATION_ID, buildBulletinNotification(floodData.announcement))
+                        }
+                    }
                 }
             }
         }
@@ -74,10 +79,9 @@ class NotificationService: Service() {
         }
 
         val precipitation = if (rain > 1) "$rain% Rain." else "No Rain."
-
         val tempInCelsius = if (temp != null) temp - 273.15 else 0.0
         val tempInString = String.format("%.1f", tempInCelsius)
-        val title = if (floodLevel > 0) "Flood level reached $floodLevel FT! $precipitation" else "$tempInString°C $descCapitalized, $precipitation"
+        val title = if (floodLevel > 0) "Flood level reached $floodLevel FT! $precipitation" else "$tempInString°C $descCapitalized"
         val content = if (floodLevel > 0) "View evacuation centers and emergency hotlines" else "View flood history and announcements"
         val icon = if (floodLevel > 0) R.drawable.ic_home_flood else R.drawable.ic_weather_partly_cloudy
 
@@ -87,6 +91,24 @@ class NotificationService: Service() {
             .setSmallIcon(icon)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
+            .setOngoing(false)
+            .build()
+    }
+
+    private fun buildBulletinNotification(title: String): Notification {
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0, notificationIntent, 0
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText("Open app to see more details.")
+            .setSmallIcon(R.drawable.ic_baseline_announcement_24)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setOngoing(false)
             .build()
     }
 
@@ -98,5 +120,6 @@ class NotificationService: Service() {
 
     companion object {
         const val NOTIFICATION_ID = 1
+        const val BULLETIN_NOTIFICATION_ID = 2
     }
 }

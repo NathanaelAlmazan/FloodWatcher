@@ -94,7 +94,7 @@ fun ProfileScreen(
                             )
 
                             Text(
-                                text = "RESIDENT",
+                                text = if (mainViewModel.currentUser!!.admin) "ADMIN" else "RESIDENT",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color(0xFFC6824B),
                                 textAlign = TextAlign.Center

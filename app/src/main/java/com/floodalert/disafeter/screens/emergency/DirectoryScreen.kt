@@ -133,24 +133,24 @@ fun DirectoryScreen(
             onValueChange = { directoryContact = it },
             label = {
                 Text(
-                    text = "Contact Number",
+                    text = if (directoryType == "Email") "Email" else "Contact Number",
                     style = MaterialTheme.typography.labelLarge
                 )
             },
             placeholder = {
                 Text(
-                    text = "e.g. 09*********",
+                    text = if (directoryType == "Email") "e.g. john.doe@gmail.com" else "e.g. 09*********",
                     style = MaterialTheme.typography.labelLarge
                 )
             },
             leadingIcon = {
                 Icon(
-                    painter = painterResource(R.drawable.ic_phone),
+                    painter = if (directoryType == "Email") painterResource(R.drawable.ic_email) else painterResource(R.drawable.ic_phone),
                     contentDescription = null
                 )
             },
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
+                keyboardType = if (directoryType == "Email") KeyboardType.Email else KeyboardType.Number
             ),
             isError = false,
             modifier = Modifier

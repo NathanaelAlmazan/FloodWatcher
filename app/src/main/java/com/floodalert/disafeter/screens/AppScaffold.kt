@@ -27,6 +27,9 @@ import com.floodalert.disafeter.MainViewModel
 import com.floodalert.disafeter.R
 import com.floodalert.disafeter.screens.authentication.LoginScreen
 import com.floodalert.disafeter.screens.authentication.RegisterScreen
+import com.floodalert.disafeter.screens.bulletin.BulletinFormScreen
+import com.floodalert.disafeter.screens.bulletin.BulletinScreen
+import com.floodalert.disafeter.screens.bulletin.BulletinViewModel
 import com.floodalert.disafeter.screens.emergency.DirectoryScreen
 import com.floodalert.disafeter.screens.emergency.EmergencyScreen
 import com.floodalert.disafeter.screens.emergency.EmergencyViewModel
@@ -44,6 +47,8 @@ sealed class Screen(val route: String, val title: String, @DrawableRes val icon:
     object Weather : Screen("weatherScreen", "Weather", R.drawable.ic_weather_partly_cloudy)
     object FloodHistory : Screen("floodHistory", "History", R.drawable.ic_weather_partly_cloudy)
     object Evacuate : Screen("evacuateScreen", "Evacuate", R.drawable.ic_run_fast)
+    object Bulletin : Screen("bulletinScreen", "Bulletin", R.drawable.ic_view_dashboard)
+    object BulletinForm : Screen("bulletinFormScreen", "BulletinForm", R.drawable.ic_view_dashboard)
     object EvacuateMap: Screen("evacuateMap", "EvacuateMap", R.drawable.ic_run_fast)
     object EvacuateForm: Screen("evacuateFormScreen", "EvacuateForm", R.drawable.ic_run_fast)
     object Emergency: Screen("emergencyScreen", "Emergency", R.drawable.ic_ambulance)
@@ -64,6 +69,7 @@ fun AppScaffold(mainViewModel: MainViewModel) {
         Screen.Weather,
         Screen.Evacuate,
         Screen.Emergency,
+        Screen.Bulletin,
         Screen.Profile
     )
 
@@ -93,12 +99,6 @@ fun AppScaffold(mainViewModel: MainViewModel) {
                     navigationList.forEach { screen ->
                         NavigationBarItem(
                             icon = { Icon(painterResource(screen.icon), contentDescription = null) },
-                            label = {
-                                    Text(
-                                        text = screen.title,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                            },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             onClick = {
                                 navController.navigate(screen.route) {
@@ -126,6 +126,10 @@ fun AppScaffold(mainViewModel: MainViewModel) {
                             Screen.Evacuate.title -> {
                                 mainViewModel.hideActionButton = true
                                 navController.navigate(Screen.EvacuateForm.route)
+                            }
+                            Screen.Bulletin.title -> {
+                                mainViewModel.hideActionButton = true
+                                navController.navigate(Screen.BulletinForm.route)
                             }
                             Screen.Profile.title -> {
                                 mainViewModel.hideActionButton = true
@@ -255,6 +259,28 @@ fun AppNavHost(
                     onNavigateToEmergency = {
                         navController.navigate(Screen.Emergency.route)
                     }
+                )
+            }
+        }
+
+        composable(Screen.Bulletin.route) {
+            val bulletinViewModel: BulletinViewModel = viewModel(
+                factory = BulletinViewModel.Factory,
+                viewModelStoreOwner = viewModelStoreOwner
+            )
+
+            BulletinScreen(
+                viewModel = bulletinViewModel,
+                mainViewModel = mainViewModel,
+                onNavigateToForm = { navController.navigate(Screen.BulletinForm.route) }
+            )
+        }
+
+        composable(Screen.BulletinForm.route) {
+            CompositionLocalProvider(LocalViewModelStoreOwner provides viewModelStoreOwner) {
+                BulletinFormScreen(
+                    viewModel = viewModel(),
+                    onNavigateToBulletin = { navController.navigate(Screen.Bulletin.route) }
                 )
             }
         }
