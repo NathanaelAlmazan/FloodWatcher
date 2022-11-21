@@ -272,7 +272,10 @@ fun AppNavHost(
             BulletinScreen(
                 viewModel = bulletinViewModel,
                 mainViewModel = mainViewModel,
-                onNavigateToForm = { navController.navigate(Screen.BulletinForm.route) }
+                onNavigateToForm = {
+                    navController.navigate(Screen.BulletinForm.route)
+                    mainViewModel.hideActionButton = true
+                }
             )
         }
 
