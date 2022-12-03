@@ -305,7 +305,7 @@ fun WeatherScreen(
                     )
                 }
                 Text(
-                    text = "${floodData.precipitation}%",
+                    text = "${floodData.precipitation.toInt()}%",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 8.dp)
