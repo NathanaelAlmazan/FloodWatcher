@@ -6,24 +6,24 @@ The Marikina River Level Monitor app is a must-have for residents of Marikina Ci
 ## Features
 1. **Current Weather and River Level Data**
    - Stay informed with real-time updates on the current weather and river level.
-   ![Current Weather and River Level](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_f.jpg)
+   <img alt="Current Weather and River Level" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_f.jpg" width="200" />
 
-2. **River Level Forecast and History**
+1. **River Level Forecast and History**
    - Access historical data and forecasts to anticipate and prepare for potential flooding.
    ![River Level History](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_g.jpg)
 
-3. **Evacuation Center Locations**
+2. **Evacuation Center Locations**
    - Find the nearest evacuation center quickly and easily.
    ![Evacuation Centers](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_c.jpg)
 
-4. **Directions to Nearest Evacuation Center**
+3. **Directions to Nearest Evacuation Center**
    - Get step-by-step directions to the closest evacuation center to ensure you reach safety without delay.
    ![Directions to Evacuation Center](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_h.PNG)
 
-5. **Emergency Push Notifications**
+4. **Emergency Push Notifications**
    - Receive push notifications for emergency alerts and updates about the river's status.
 
-6. **Send SOS SMS to Emergency Directories**
+5. **Send SOS SMS to Emergency Directories**
    - Send an SOS message to pre-listed emergency contacts with just one click.
 
 ## Screenshots
@@ -42,6 +42,4 @@ The Marikina River Level Monitor app is a must-have for residents of Marikina Ci
 
 ---
 
-Stay safe and stay informed with the Marikina River Level Monitor app.
-
-[Download on the Play Store](https://play.google.com/store/apps/details?id=com.marikina.river.monitor)
+Stay safe and stay informed with Flood Watcher.
