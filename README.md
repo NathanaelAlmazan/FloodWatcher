@@ -40,7 +40,7 @@ The Marikina River Level Monitor app is a must-have for residents of Marikina Ci
 <img alt="Dark Mode" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_d.jpg" width="200" />
 
 ## How to Use
-1. **Install the App**: Download and install the Marikina River Level Monitor app from the Play Store.
+1. **Install the App**: Download and build the app.
 2. **Set Up Notifications**: Enable push notifications to stay informed about river level changes and emergency alerts.
 3. **Check River Levels**: Open the app to view current weather, river levels, and forecasts.
 4. **Find Evacuation Centers**: Use the app to locate and get directions to the nearest evacuation centers.
