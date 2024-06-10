@@ -1,6 +1,10 @@
 # Flood Watcher
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/JND_uCsF4G8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen />
+
+https://github.com/NathanaelAlmazan/FloodWatcher/assets/113650410/6b2a1a27-dbe8-4ea3-91ac-52087e7141e9
+
+https://github.com/NathanaelAlmazan/FloodWatcher/assets/113650410/45071ed5-dcca-42fd-ad6d-2d726581351e
+
 
 ## Overview
 The Marikina River Level Monitor app is a must-have for residents of Marikina City, providing real-time monitoring and alerts for the Marikina River's water level. This app helps ensure the safety and preparedness of the community by offering timely updates and essential information.
@@ -12,15 +16,15 @@ The Marikina River Level Monitor app is a must-have for residents of Marikina Ci
 
 1. **River Level Forecast and History**
    - Access historical data and forecasts to anticipate and prepare for potential flooding.
-   ![River Level History](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_g.jpg)
+   <img alt="River Level History" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_g.jpg" width="200" />
 
 2. **Evacuation Center Locations**
    - Find the nearest evacuation center quickly and easily.
-   ![Evacuation Centers](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_c.jpg)
+   <img alt="Evacuation Centers" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_c.jpg" width="200" />
 
 3. **Directions to Nearest Evacuation Center**
    - Get step-by-step directions to the closest evacuation center to ensure you reach safety without delay.
-   ![Directions to Evacuation Center](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_h.PNG)
+   <img alt="Directions to Evacuation Center" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_h.PNG" width="200" />
 
 4. **Emergency Push Notifications**
    - Receive push notifications for emergency alerts and updates about the river's status.
@@ -30,10 +34,10 @@ The Marikina River Level Monitor app is a must-have for residents of Marikina Ci
 
 ## Screenshots
 ### Light Mode
-![Light Mode](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_c.jpg)
+<img alt="Light Mode" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_c.jpg" width="200" />
 
 ### Dark Mode
-![Dark Mode](https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_d.jpg)
+<img alt="Dark Mode" src="https://github.com/NathanaelAlmazan/FloodWatcher/blob/master/screenshots/demo_d.jpg" width="200" />
 
 ## How to Use
 1. **Install the App**: Download and install the Marikina River Level Monitor app from the Play Store.
